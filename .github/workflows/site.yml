@@ -1,0 +1,89 @@
+name: Publish site
+
+# Runs every hour, so photos added to or removed from the Drive folder appear on
+# the site within the hour. It can also be started by hand from the Actions tab
+# ("Run workflow"), and runs whenever the code changes.
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      # Photos already downloaded and web copies already made are kept between runs.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            originals
+            .cache
+          key: photos-${{ github.run_id }}
+          restore-keys: photos-
+
+      - id: sync
+        name: Read the Google Drive folder
+        run: node src/drive.mjs
+        env:
+          DRIVE_FOLDER_ID: ${{ vars.DRIVE_FOLDER_ID }}
+          DRIVE_API_KEY: ${{ secrets.DRIVE_API_KEY }}
+
+      # On the hourly run, stop here if nothing in Drive has changed.
+      - id: check
+        name: Anything new?
+        run: |
+          live=$(curl -fsSL "${{ steps.pages.outputs.base_url }}/version.json" 2>/dev/null | sed -n 's/.*"fingerprint":"\([^"]*\)".*/\1/p' || true)
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$live" = "${{ steps.sync.outputs.fingerprint }}" ]; then
+            echo "No changes in Drive since the last publish."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        if: steps.check.outputs.changed == 'true'
+        run: node src/build.mjs
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+          CONTENT_FINGERPRINT: ${{ steps.sync.outputs.fingerprint }}
+
+      - if: steps.check.outputs.changed == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

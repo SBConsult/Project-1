@@ -1,0 +1,95 @@
+{
+  "_note": "Preview data, written by hand from the approved edit. On the live site this file is generated from the Google Drive folders.",
+  "opener": "20231227-DSCF2287.jpg",
+  "aboutPhoto": "DSCF3983.jpg",
+  "galleries": [
+    {
+      "slug": "street",
+      "title": "Street",
+      "group": "Series",
+      "intro": "Stockholm, seen up close: rain, escalators, benches and the people who pass through them. One frame from Rome.",
+      "photos": [
+        "20231227-DSCF2287.jpg",
+        "DSCF5527.jpg",
+        "20210528-DSCF2493.jpg",
+        "20220813-DSCF0244.jpg",
+        "20210827-DSCF5534.jpg",
+        "DSCF5536.jpg",
+        "20220513-DSCF9195.jpg",
+        "20220607-DSCF9339.jpg",
+        "L1001061.jpg",
+        "20230409-DSCF1131.jpg",
+        "L1001060.jpg"
+      ]
+    },
+    {
+      "slug": "light-and-shadow",
+      "title": "Light & shadow",
+      "group": "Series",
+      "intro": "Single figures, deep blacks and one source of light.",
+      "photos": [
+        "20210802-DSCF4918.jpg",
+        "20221116-DSCF0551.jpg",
+        "20230915-DSCF1968.jpg",
+        "DSCF4297.jpg",
+        "20230504-L1004614.jpg",
+        "20210602-DSCF2696.jpg",
+        "20220830-DSCF0380.jpg",
+        "20220830-DSCF0387.jpg",
+        "20210730-DSCF4856.jpg",
+        "DSCF3983.jpg",
+        "DSCF4731.jpg"
+      ]
+    },
+    {
+      "slug": "places",
+      "title": "Places",
+      "group": "Series",
+      "intro": "Swedish landscape from the west coast to Jämtland, from open sky to still water.",
+      "photos": [
+        "20220715-DSCF9866.jpg",
+        "20220714-DSCF9837.jpg",
+        "20210917-DSCF6017.jpg",
+        "20210918-DSCF6082.jpg",
+        "20230710-L1005129.jpg",
+        "DSCF5608.jpg",
+        "DSCF4061.jpg"
+      ]
+    },
+    {
+      "slug": "architecture",
+      "title": "Architecture",
+      "group": "Series",
+      "intro": "Buildings and interiors in Stockholm and Uppsala, with people only for scale.",
+      "photos": [
+        "20230922-DSCF2075.jpg",
+        "20230330-DSCF0923.jpg",
+        "L1004822.jpg",
+        "20210531-DSCF2629.jpg",
+        "DSCF4033.jpg",
+        "DSCF4732.jpg",
+        "L1001063.jpg"
+      ]
+    },
+    {
+      "slug": "istria",
+      "title": "Istria",
+      "group": "Travels",
+      "intro": "Rovinj and Pula, July 2025. Stone alleys, shutters and the Adriatic in a strong wind.",
+      "photos": [
+        "DSCF3734.jpg",
+        "DSCF3681.jpg",
+        "DSCF3765.jpg",
+        "DSCF3772.jpg",
+        "DSCF3687.jpg",
+        "DSCF3839.jpg",
+        "DSCF3698.jpg",
+        "DSCF3749.jpg",
+        "DSCF3752.jpg",
+        "DSCF3762.jpg",
+        "DSCF3789.jpg",
+        "DSCF3867.jpg"
+      ]
+    }
+  ]
+}
