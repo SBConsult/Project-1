@@ -44,23 +44,6 @@
     })
   );
 
-  /* The name in the footer is sized to run exactly edge to edge. */
-  const sig = d.querySelector('.signature');
-  const fit = () => {
-    if (!sig) return;
-    const span = sig.firstElementChild;
-    sig.style.fontSize = '100px';
-    const w = span.getBoundingClientRect().width;
-    if (w) sig.style.fontSize = `${(100 * sig.clientWidth) / w - 0.05}px`;
-  };
-  fit();
-  if (d.fonts && d.fonts.ready) d.fonts.ready.then(fit);
-  let rt;
-  window.addEventListener('resize', () => {
-    clearTimeout(rt);
-    rt = setTimeout(fit, 120);
-  });
-
   /* Photo viewer for series pages. */
   const dataEl = d.getElementById('photo-data');
   if (!dataEl) return;

@@ -392,19 +392,6 @@ a { color: inherit; }
 .footer__links { display: flex; gap: 24px; }
 .footer__links a { text-decoration: none; transition: color 0.25s; }
 .footer__links a:hover { color: var(--ink); }
-.signature {
-  margin: clamp(36px, 6vw, 88px) 0 0;
-  font-size: 8.6vw;
-  line-height: 0.78;
-  font-weight: 240;
-  font-stretch: 125%;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  padding-bottom: 0.04em;
-}
-.signature span { display: inline-block; }
 
 /* Photo viewer */
 .lb {

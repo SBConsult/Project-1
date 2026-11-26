@@ -55,7 +55,6 @@ function footer(ctx) {
       <p class="footer__note">${esc(s.copyright)}</p>
       <p class="footer__links">${links.join('')}</p>
     </div>
-    <p class="signature" aria-hidden="true"><span>${esc(s.name)}</span></p>
   </div>
 </footer>`;
 }
