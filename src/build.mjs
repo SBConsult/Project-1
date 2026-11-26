@@ -13,7 +13,8 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { processPhoto, mapLimit, makeSocialImage } from './images.mjs';
-import { homePage, galleryPage, aboutPage, notFoundPage, makeLinks, yearsLabel, esc } from './templates.mjs';
+import { homePage, galleryPage, groupPage, aboutPage, notFoundPage, makeLinks, yearsLabel, esc } from './templates.mjs';
+import { slugify } from './images.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = new Set(process.argv.slice(2));
@@ -32,6 +33,7 @@ const hash = (s) => createHash('sha1').update(s).digest('hex').slice(0, 10);
 const settings = await readJson('content/settings.json');
 const content = await readJson('content/galleries.json');
 const alts = await readJson('content/alt.json', {});
+const intros = await readJson('content/intros.json', {});
 const siteUrl = (process.env.SITE_URL || settings.siteUrl || '').replace(/\/?$/, '/');
 
 await fs.rm(OUT, { recursive: true, force: true });
@@ -69,6 +71,29 @@ for (const g of galleries) {
   g.years = yearsLabel(g.photos.map((p) => p.year));
   // Cover: the chosen one, else the first photo that is not already the opening photograph on the home page.
   g.cover = (g.cover && g.photos.find((p) => p.name === g.cover)) || g.photos.find((p) => p.name !== openerName) || g.photos[0];
+}
+
+// Top level of the Work list: each series, and each collection (e.g. Travels) as one card.
+const entries = [];
+const groups = new Map();
+const taken = new Set(galleries.map((g) => g.slug));
+for (const g of galleries) {
+  if (!g.group || g.group === 'Series') { entries.push(g); continue; }
+  let grp = groups.get(g.group);
+  if (!grp) {
+    let slug = slugify(g.group);
+    while (taken.has(slug)) slug += '-collection';
+    taken.add(slug);
+    grp = { kind: 'group', slug, title: g.group, galleries: [], intro: intros[slug] || '' };
+    groups.set(g.group, grp);
+    entries.push(grp);
+  }
+  grp.galleries.push(g);
+  g.parent = grp;
+}
+for (const grp of groups.values()) {
+  grp.cover = grp.galleries[0].cover;
+  grp.years = yearsLabel(grp.galleries.flatMap((g) => g.photos.map((p) => p.year)));
 }
 
 const openerGallery = galleries.find((g) => g.photos.some((p) => p.name === openerName)) || galleries[0];
@@ -137,6 +162,7 @@ const ctx = {
   mode: MODE,
   settings,
   galleries,
+  entries,
   opener,
   openerGallery,
   aboutPhoto: aboutName ? describe(aboutName) : null,
@@ -151,6 +177,7 @@ const ctx = {
 const write = (file, html) => fs.writeFile(path.join(OUT, file), html);
 await write('index.html', homePage(ctx));
 for (const [i, g] of galleries.entries()) await write(`${g.slug}.html`, galleryPage(ctx, g, galleries[(i + 1) % galleries.length]));
+for (const grp of groups.values()) await write(`${grp.slug}.html`, groupPage(ctx, grp));
 await write('about.html', aboutPage(ctx));
 
 if (MODE === 'production') {
@@ -159,7 +186,7 @@ if (MODE === 'production') {
   await write('404.html', notFoundPage(ctx).replace('<head>', `<head>\n<base href="${esc(base)}">`));
   await write('robots.txt', `User-agent: *\nAllow: /\n${siteUrl !== '/' ? `Sitemap: ${siteUrl}sitemap.xml\n` : ''}`);
   if (siteUrl !== '/') {
-    const urls = ['', 'about', ...galleries.map((g) => g.slug)].map((u) => `<url><loc>${esc(siteUrl + u)}</loc></url>`);
+    const urls = ['', 'about', ...[...groups.values()].map((g) => g.slug), ...galleries.map((g) => g.slug)].map((u) => `<url><loc>${esc(siteUrl + u)}</loc></url>`);
     await write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>\n`);
   }
   await write('.nojekyll', '');

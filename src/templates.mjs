@@ -22,6 +22,7 @@ export function makeLinks(ext) {
     work: ext ? 'index.html#work' : './#work',
     about: `about${ext}`,
     gallery: (g) => `${g.slug}${ext}`,
+    group: (g) => `${g.slug}${ext}`,
   };
 }
 
@@ -117,26 +118,7 @@ export function homePage(ctx) {
   <p class="lead">${esc(s.statement)}</p>
 </section>`;
 
-  const card = (g, i) => {
-    const c = g.cover;
-    const sizes = `(min-width: 760px) ${c.orientation === 'landscape' ? 46 : c.orientation === 'square' ? 40 : 35}vw, 100vw`;
-    return `<article class="card card--${c.orientation}" style="--i:${i}">
-        <a class="card__link" href="${L.gallery(g)}">
-          ${picture(c, { sizes, eager: i < 2, alt: c.alt })}
-          <span class="card__text">
-            <span class="card__title">${esc(g.title)}<span class="arrow" aria-hidden="true">→</span></span>
-            <span class="card__meta"><span>${esc(g.group || 'Series')}</span><span>${esc(g.years)}</span><span>${plural(g.photos.length, 'photograph', 'photographs')}</span></span>
-          </span>
-        </a>
-      </article>`;
-  };
-  const col = (side) =>
-    `<div class="cards__col cards__col--${side}">\n      ${galleries
-      .map((g, i) => [g, i])
-      .filter(([, i]) => (side === 'left' ? i % 2 === 0 : i % 2 === 1))
-      .map(([g, i]) => card(g, i))
-      .join('\n      ')}\n    </div>`;
-  const cards = `${col('left')}\n    ${col('right')}`;
+  const cards = cardsGrid(ctx, ctx.entries);
 
   const work = `<section class="work wrap" id="work" aria-labelledby="work-title">
   <div class="section-head">
@@ -155,6 +137,61 @@ export function homePage(ctx) {
     current: '',
     fragment: ctx.mode === 'preview',
     body: `<main id="main">\n${hero}\n${intro}\n${work}\n</main>`,
+  });
+}
+
+/** Cover card for a series or a collection, used on the home page and collection pages. */
+function cardsGrid(ctx, items) {
+  const L = ctx.links;
+  const card = (g, i) => {
+    const c = g.cover;
+    const sizes = `(min-width: 760px) ${c.orientation === 'landscape' ? 46 : c.orientation === 'square' ? 40 : 35}vw, 100vw`;
+    const meta = g.kind === 'group'
+      ? [`Collection`, g.years, plural(g.galleries.length, 'series', 'series')]
+      : [g.group || 'Series', g.years, plural(g.photos.length, 'photograph', 'photographs')];
+    return `<article class="card card--${c.orientation}" style="--i:${i}">
+        <a class="card__link" href="${g.kind === 'group' ? L.group(g) : L.gallery(g)}">
+          ${picture(c, { sizes, eager: i < 2, alt: c.alt })}
+          <span class="card__text">
+            <span class="card__title">${esc(g.title)}<span class="arrow" aria-hidden="true">→</span></span>
+            <span class="card__meta">${meta.filter(Boolean).map((m) => `<span>${esc(m)}</span>`).join('')}</span>
+          </span>
+        </a>
+      </article>`;
+  };
+  const col = (side) =>
+    `<div class="cards__col cards__col--${side}">\n      ${items
+      .map((g, i) => [g, i])
+      .filter(([, i]) => (side === 'left' ? i % 2 === 0 : i % 2 === 1))
+      .map(([g, i]) => card(g, i))
+      .join('\n      ')}\n    </div>`;
+  return `${col('left')}\n    ${col('right')}`;
+}
+
+/** A collection (a Drive folder of folders, e.g. Travels): its series as cards. */
+export function groupPage(ctx, grp) {
+  const total = grp.galleries.reduce((n, g) => n + g.photos.length, 0);
+  const body = `<main id="main" class="gallery">
+<header class="ghead wrap">
+  <p class="eyebrow">Collection</p>
+  <h1 class="display">${esc(grp.title)}</h1>
+  <div class="ghead__row">
+    ${grp.intro ? `<p class="ghead__intro">${esc(grp.intro)}</p>` : '<span></span>'}
+    <dl class="facts"><div><dt>Series</dt><dd>${grp.galleries.length}</dd></div><div><dt>Photographs</dt><dd>${total}</dd></div><div><dt>Years</dt><dd>${esc(grp.years)}</dd></div></dl>
+  </div>
+</header>
+<section class="work work--group wrap" aria-label="${esc(grp.title)}">
+  <div class="cards">
+    ${cardsGrid(ctx, grp.galleries)}
+  </div>
+</section>
+</main>`;
+  return page(ctx, {
+    title: `${grp.title} · ${ctx.settings.name}`,
+    description: grp.intro || ctx.settings.description,
+    pageId: 'group',
+    current: 'work',
+    body,
   });
 }
 
@@ -227,7 +264,7 @@ export function galleryPage(ctx, g, next) {
 
   const body = `<main id="main" class="gallery">
 <header class="ghead wrap">
-  <p class="eyebrow">${esc(g.group || 'Series')}</p>
+  <p class="eyebrow">${g.parent ? `<a href="${L.group(g.parent)}">← ${esc(g.parent.title)}</a>` : esc(g.group || 'Series')}</p>
   <h1 class="display">${esc(g.title)}</h1>
   <div class="ghead__row">
     ${g.intro ? `<p class="ghead__intro">${esc(g.intro)}</p>` : '<span></span>'}
